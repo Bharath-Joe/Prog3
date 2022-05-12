@@ -35,8 +35,22 @@ def readFile(inputFile):
 
 def doFIFO(addressList, numOfFrames):
     f = open("BACKING_STORE.bin", "rb")
-    line = f.readline()
-    print(line)
+    for address in addressList:
+        f.seek(int(address))
+        byteReferenced = f.read(1)
+        byteReferenced = int(byteReferenced.hex(), 16)
+        if byteReferenced >= 128:
+            byteReferenced = byteReferenced - 256
+        f.seek((int(address)//256)*256)
+        contents = f.read(256)
+        print(address + ", " + str(byteReferenced) + ", " + "__")
+        print(contents.hex())
+    print("Number of Translated Addresses = ", len(addressList))
+    print("Page Faults = ")
+    print("Page Fault Rate = ")
+    print("TLB Hits = ")
+    print("TLB Misses = ")
+    print("TLB Hit Rate = ")
 
 def doLRU(addressList, numOfFrames):
     print("You are in LRU function.")
