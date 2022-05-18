@@ -43,7 +43,7 @@ def updatePM(pageNum, frameNumber, numOfFrames, algorithm):
         frameNumber += 1
     elif len(physicalMemory) == numOfFrames:
         if algorithm == "FIFO":
-            frameNumber = doFIFO(physicalMemory, pageNum)
+            frameNumber = doFIFO(physicalMemory, pageNum, frameNumber)
         elif algorithm == "LRU":
             frameNumber = doLRU(physicalMemory, pageNum, frameNumber)
         elif algorithm == "OPT":
@@ -89,6 +89,7 @@ def driver(addressList, numOfFrames, algorithm):
         for item in physicalMemory:
             if item[1] == pageNum:
                 finalFrameValue = item[0]
+
         print(address + ", " + str(byteReferenced) + ", " + str(finalFrameValue))
         print(contents.hex())
 
@@ -100,7 +101,7 @@ def driver(addressList, numOfFrames, algorithm):
     print("TLB Hit Rate = %3.3f" %(hitCount/len(addressList)))
 
 
-def doFIFO(physicalMemory, pageNum):
+def doFIFO(physicalMemory, pageNum, frameNum):
     invalidPageNum = physicalMemory.pop(0)
     physicalMemory.append((invalidPageNum[0], pageNum))
     pageTable[invalidPageNum[1]] = (invalidPageNum[0], 0)
@@ -108,7 +109,6 @@ def doFIFO(physicalMemory, pageNum):
         if tlb[i][0] == invalidPageNum[1]:
             del tlb[i]
             break
-    # print("You are in FIFO function.")
     return invalidPageNum[0]
 
 def doLRU(physicalMemory):
