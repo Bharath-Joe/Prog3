@@ -1,5 +1,7 @@
 import sys
 
+# When the thing from memory gets swapped out, do you update your TLB by removing the item?
+
 tlb = [] # [(logical memory page num, physical memory frame number), ...]
 pageTable = {} # pageNum: [FrameNum, validBit]
 physicalMemory = [] # (frameNum, page)
@@ -43,7 +45,7 @@ def updatePM(pageNum, frameNumber, numOfFrames, algorithm):
         frameNumber += 1
     elif len(physicalMemory) == numOfFrames:
         if algorithm == "FIFO":
-            frameNumber = doFIFO(physicalMemory, pageNum, frameNumber)
+            frameNumber = doFIFO(physicalMemory, pageNum)
         elif algorithm == "LRU":
             frameNumber = doLRU(physicalMemory, pageNum, frameNumber)
         elif algorithm == "OPT":
@@ -81,8 +83,9 @@ def driver(addressList, numOfFrames, algorithm):
                 frameNumber = updatePM(pageNum, frameNumber, numOfFrames, algorithm)
             else: # Soft Miss
                 missCount += 1
-                updateTLB(pageNum, frameNumber)
-                frameNumber = updatePM(pageNum, frameNumber, numOfFrames, algorithm)
+                theframeNumber = pageTable[pageNum][0]
+                updateTLB(pageNum, theframeNumber)
+                frameNumber = updatePM(pageNum, theframeNumber, numOfFrames, algorithm)
     
         # print("TLB:",tlb)
         # print("Physical Memory Representation", physicalMemory)
@@ -101,7 +104,14 @@ def driver(addressList, numOfFrames, algorithm):
     print("TLB Hit Rate = %3.3f" %(hitCount/len(addressList)))
 
 
-def doFIFO(physicalMemory, pageNum, frameNum):
+def doFIFO(physicalMemory, pageNum):
+    # if it is a soft miss, the page access needs to go to the end of the pM
+    for i in range(len(physicalMemory)):
+        if physicalMemory[i][1] == pageNum:
+            invalidPageNum = physicalMemory.pop(i)
+            physicalMemory.append((invalidPageNum[0], pageNum))
+            return invalidPageNum[0]
+
     invalidPageNum = physicalMemory.pop(0)
     physicalMemory.append((invalidPageNum[0], pageNum))
     pageTable[invalidPageNum[1]] = (invalidPageNum[0], 0)
