@@ -1,21 +1,19 @@
-from re import M
 import sys
-
-from numpy import empty
-
-# When the thing from memory gets swapped out, do you update your TLB by removing the item?
 
 tlb = [] # [(logical memory page num, physical memory frame number), ...]
 pageTable = {} # pageNum: [FrameNum, validBit]
 physicalMemory = [] # (frameNum, page)
-
 LRUqueue = []
 jobList = []
 
 def main():
     inputFile = sys.argv[1]
-    frameNums = sys.argv[2]
-    algorithm = sys.argv[3]
+    if len(sys.argv) == 2:
+        frameNums = "256"
+        algorithm = "FIFO"
+    elif len(sys.argv) == 4:
+        frameNums = sys.argv[2]
+        algorithm = sys.argv[3]
     algorithmList = ["FIFO", "LRU", "OPT"]
     if algorithm not in algorithmList:
         algorithm = "FIFO"
@@ -41,6 +39,7 @@ def readFile(inputFile):
     return listOfAddresses
 
 def updateTLB(pageNum, frameNumber):
+    # TLB with only 16 entries
     if len(tlb) < 16:
         tlb.append((pageNum, frameNumber))
     elif len(tlb) == 16:
@@ -89,7 +88,6 @@ def driver(addressList, numOfFrames, algorithm):
                     if LRUqueue[i][1] == pageNum:
                         val = LRUqueue.pop(i)
                         break
-                print("Val: ", val)
                 LRUqueue.append((pageTable[val[1]][0], pageNum)) # move pageNum to most recently used (end of queue)
                 break
         if hitCountBefore == hitCount: # Not a hit
@@ -97,18 +95,16 @@ def driver(addressList, numOfFrames, algorithm):
                 pageFaultCount += 1
                 missCount += 1
                 frameNumber = updatePM(pageNum, frameNumber, numOfFrames, algorithm, LRUqueue, jobList)
-                updateTLB(pageNum, frameNumber) # moved from before updatePM
-                pageTable[pageNum] = (frameNumber, 1) # moved from before frame number update above
+                updateTLB(pageNum, frameNumber)
+                pageTable[pageNum] = (frameNumber, 1)
             else: # Soft Miss
                 missCount += 1
                 frameNumber = updatePM(pageNum, frameNumber, numOfFrames, algorithm, LRUqueue, jobList)
                 updateTLB(pageNum, frameNumber) # moved from before updatePM
-            # print("Page Table: ", pageTable)
             LRUqueue.append((pageTable[pageNum][0], pageNum))
             
-    
-        print("TLB:",tlb)
-        print("Physical Memory Representation", physicalMemory)
+        # print("TLB:",tlb)
+        # print("Physical Memory Representation", physicalMemory)
         for item in physicalMemory:
             if item is not None:
                 if item[1] == pageNum:
@@ -143,9 +139,9 @@ def doFIFO(physicalMemory, pageNum):
     return invalidPageNum[0]
 
 def doLRU(physicalMemory, pageNum, LRUqueue):
-    print("LRU queue", LRUqueue)
+    # print("LRU queue", LRUqueue)
     invalidPageNum = LRUqueue.pop(0) # head of queue is least recently used pageNum
-    print("Invalid page num: ", invalidPageNum)
+    # print("Invalid page num: ", invalidPageNum)
     # remove LRU from physical memory
     for i in range(len(physicalMemory)):
         if physicalMemory[i][1] == invalidPageNum[1]:
@@ -169,14 +165,9 @@ def doOPT(physicalMemory, pageNum, jobList):
             if pageVal == int(jobList[i]) // 256:
                 mydict[pageVal] = i
                 break
-    # check tie-breaking rule for multiple values that never show up again
     maxVal = None
-    
     if len(jobList) == 0:
-        # if joblist is empty replace last frame with last job
         maxVal = max(physicalMemory, key = lambda i : i[0])[1]
-        print("Max val: ", maxVal)
-    
     else:
         for key in mydict:
             if maxVal is None:
@@ -184,14 +175,11 @@ def doOPT(physicalMemory, pageNum, jobList):
             else:
                 if mydict[key] > mydict[maxVal]:
                     maxVal = key
-    print("Joblist: ", jobList)
-    print("Mydict: ", mydict)
     # maxVal contains highest pageNumber
     for i in range(len(physicalMemory)):
         if physicalMemory[i][1] == maxVal:
             invalidPageNum = physicalMemory.pop(i)
             break
-    # frameNum = pageTable[pageNum][0]
     physicalMemory.append((invalidPageNum[0], pageNum))
     pageTable[invalidPageNum[1]] = (invalidPageNum[0], 0)
     for i in range(len(tlb)):
@@ -202,7 +190,5 @@ def doOPT(physicalMemory, pageNum, jobList):
     return invalidPageNum[0]
         
     
-
-
 if __name__ == '__main__':
     main()
