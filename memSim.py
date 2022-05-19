@@ -11,6 +11,12 @@ def main():
     if len(sys.argv) == 2:
         frameNums = "256"
         algorithm = "FIFO"
+    elif len(sys.argv) == 3 and sys.argv[2].isdigit() == True:
+        frameNums = sys.argv[2]
+        algorithm = "FIFO"
+    elif len(sys.argv) == 3 and sys.argv[2].isdigit() == False:
+        algorithm = sys.argv[2]
+        frameNums = "256"
     elif len(sys.argv) == 4:
         frameNums = sys.argv[2]
         algorithm = sys.argv[3]

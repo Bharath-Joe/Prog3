@@ -1,0 +1,14 @@
+Names: Bharath S. & Ameya M.
+
+Special Instructions:
+
+To run this program:
+
+python3 memSim.py <filename> <FRAMES> <PRA>
+-------------------------------------------
+Frames can be any integer > 0 and <= 256.
+PRA can be any of the following: FIFO, LRU, OPT.
+
+For this project we implemented our own way of dealing with tie-breakers when it 
+comes to the PRAs. Therefore, the frame number printed out might not be the same, 
+but the hit and fault rate shouldn't be affected.
